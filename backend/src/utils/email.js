@@ -9,6 +9,9 @@ const sendEmail = async ({ to, subject, html }) => {
         user: process.env.EMAIL_USER || 'your-email@gmail.com', // Cấu hình tạm để test
         pass: process.env.EMAIL_PASS || 'your-app-password',
       },
+      connectionTimeout: 5000, // 5s timeout
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
     });
 
     const mailOptions = {

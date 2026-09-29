@@ -53,13 +53,22 @@ exports.register = async (req, res, next) => {
     const year = new Date().getFullYear();
     const htmlMessage = verifyEmailTemplate(fullName, verifyToken, year);
     
-    await sendEmail({
+    const emailSent = await sendEmail({
       to: user.email,
       subject: 'Xác thực email - Toeic-Hub',
       html: htmlMessage,
     });
 
-    return ApiResponse.created(res, 'Đăng ký thành công. Vui lòng nhập mã OTP đã được gửi tới email.', null);
+    if (!emailSent) {
+      // Tự động kích hoạt nếu gửi email thất bại (do Render chặn SMTP)
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true, verifyToken: null }
+      });
+      return ApiResponse.created(res, 'Đăng ký thành công nhưng không thể gửi email. Tài khoản đã tự động kích hoạt, bạn có thể đăng nhập ngay.', { autoVerified: true });
+    }
+
+    return ApiResponse.created(res, 'Đăng ký thành công. Vui lòng nhập mã OTP đã được gửi tới email.', { autoVerified: false });
   } catch (error) {
     next(error);
   }
@@ -113,11 +122,19 @@ exports.resendOtp = async (req, res, next) => {
     const year = new Date().getFullYear();
     const htmlMessage = verifyEmailTemplate(user.fullName, newOtp, year);
     
-    await sendEmail({
+    const emailSent = await sendEmail({
       to: email,
       subject: 'Xác thực email - Toeic-Hub',
       html: htmlMessage,
     });
+
+    if (!emailSent) {
+      await prisma.user.update({
+        where: { email },
+        data: { isVerified: true, verifyToken: null }
+      });
+      return ApiResponse.success(res, 'Lỗi gửi email. Tài khoản đã tự động kích hoạt, bạn có thể đăng nhập.', { autoVerified: true });
+    }
 
     return ApiResponse.success(res, 'Mã OTP mới đã được gửi', null);
   } catch (error) {
@@ -147,11 +164,15 @@ exports.forgotPassword = async (req, res, next) => {
       <p>Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
     `;
 
-    await sendEmail({
+    const emailSent = await sendEmail({
       to: email,
       subject: 'Toeic-Hub - Mã OTP khôi phục mật khẩu',
       html: message,
     });
+
+    if (!emailSent) {
+      throw new ApiError(500, 'Hệ thống (Render) hiện đang chặn gửi email. Vui lòng liên hệ Admin để khôi phục.');
+    }
 
     return ApiResponse.success(res, 'Mã OTP khôi phục đã được gửi vào email', null);
   } catch (error) {

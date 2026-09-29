@@ -48,10 +48,14 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await api.post('/auth/register', formData);
-      toast.success('Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
+      const response = await api.post('/auth/register', formData);
+      toast.success(response.message || 'Đăng ký thành công!');
       setTimeout(() => {
-        navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+        if (response.data?.autoVerified) {
+          navigate('/login');
+        } else {
+          navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+        }
       }, 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
