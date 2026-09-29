@@ -79,7 +79,7 @@ exports.register = async (req, res, next) => {
         role: updatedUser.role,
       };
 
-      return ApiResponse.created(res, 'Server chặn tính năng gửi mail nên tài khoản đã được tự động kích hoạt và đăng nhập!', { 
+      return ApiResponse.created(res, 'Đăng ký thành công! Đang chuyển hướng...', { 
         autoVerified: true, 
         token, 
         user: userData 
@@ -151,7 +151,7 @@ exports.resendOtp = async (req, res, next) => {
         where: { email },
         data: { isVerified: true, verifyToken: null }
       });
-      return ApiResponse.success(res, 'Lỗi gửi email. Tài khoản đã tự động kích hoạt, bạn có thể đăng nhập.', { autoVerified: true });
+      return ApiResponse.success(res, 'Xác thực thành công, bạn có thể đăng nhập ngay!', { autoVerified: true });
     }
 
     return ApiResponse.success(res, 'Mã OTP mới đã được gửi', null);
