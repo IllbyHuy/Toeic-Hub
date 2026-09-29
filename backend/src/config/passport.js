@@ -46,12 +46,13 @@ const handleOAuthLogin = async (provider, profile, done) => {
   }
 };
 
-const backendUrl = process.env.BACKEND_URL || 'https://toeic-hub.onrender.com';
+const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER) || Boolean(process.env.BACKEND_URL);
+const backendUrl = (process.env.BACKEND_URL || 'https://toeic-hub.onrender.com').replace(/\/$/, '');
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.NODE_ENV === 'production' 
+    clientID: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_ID.trim() : process.env.GOOGLE_CLIENT_ID : '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET.trim() : '',
+    callbackURL: isProduction 
       ? `${backendUrl}/api/v1/auth/google/callback` 
       : "http://localhost:5000/api/v1/auth/google/callback"
   },
@@ -61,9 +62,9 @@ passport.use(new GoogleStrategy({
 ));
 
 passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.NODE_ENV === 'production' 
+    clientID: process.env.GITHUB_CLIENT_ID ? process.env.GITHUB_CLIENT_ID.trim() : '',
+    clientSecret: process.env.GITHUB_CLIENT_SECRET ? process.env.GITHUB_CLIENT_SECRET.trim() : '',
+    callbackURL: isProduction 
       ? `${backendUrl}/api/v1/auth/github/callback` 
       : "http://localhost:5000/api/v1/auth/github/callback",
     scope: ['user:email']
