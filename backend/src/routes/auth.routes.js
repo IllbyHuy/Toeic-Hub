@@ -24,10 +24,24 @@ router.post('/reset-password', authController.resetPassword);
 router.get('/me', authenticate, authController.getMe);
 
 // OAuth Routes
+const getRedirectClientUrl = () => {
+  if (process.env.CLIENT_URL && !process.env.CLIENT_URL.includes('localhost')) {
+    return process.env.CLIENT_URL.replace(/\/$/, '');
+  }
+  if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+    return 'https://toeic-hub-git-main-illbyhuys-projects.vercel.app';
+  }
+  return 'http://localhost:5173';
+};
+
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
-router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login` }), authController.oauthCallback);
+router.get('/google/callback', (req, res, next) => {
+  passport.authenticate('google', { session: false, failureRedirect: `${getRedirectClientUrl()}/login` })(req, res, next);
+}, authController.oauthCallback);
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'], session: false }));
-router.get('/github/callback', passport.authenticate('github', { session: false, failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login` }), authController.oauthCallback);
+router.get('/github/callback', (req, res, next) => {
+  passport.authenticate('github', { session: false, failureRedirect: `${getRedirectClientUrl()}/login` })(req, res, next);
+}, authController.oauthCallback);
 
 module.exports = router;

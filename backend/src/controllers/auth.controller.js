@@ -234,10 +234,21 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
+const getClientUrl = () => {
+  if (process.env.CLIENT_URL && !process.env.CLIENT_URL.includes('localhost')) {
+    return process.env.CLIENT_URL.replace(/\/$/, '');
+  }
+  if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+    return 'https://toeic-hub-git-main-illbyhuys-projects.vercel.app';
+  }
+  return 'http://localhost:5173';
+};
+
 exports.oauthCallback = async (req, res, next) => {
   try {
+    const clientUrl = getClientUrl();
     if (!req.user) {
-      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=OAuthFailed`);
+      return res.redirect(`${clientUrl}/login?error=OAuthFailed`);
     }
     
     // Update streak on login
@@ -245,7 +256,7 @@ exports.oauthCallback = async (req, res, next) => {
     
     const token = generateToken(req.user.id);
     // Chuyển hướng về frontend kèm token
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/oauth-success?token=${token}`);
+    res.redirect(`${clientUrl}/oauth-success?token=${token}`);
   } catch (error) {
     next(error);
   }
