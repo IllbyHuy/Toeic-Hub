@@ -159,6 +159,6 @@ Frontend will be running at `http://localhost:5173`.
 
 ## 👨‍💻 Author
 
-- **GitHub:** [@your-username](https://github.com/your-username)
-- **Email:** your-email@gmail.com
+- **GitHub:** IllbyHuy(https://github.com/IllbyHuy)
+- **Email:** illby2503@gmail.com/dokhanhhuy01@gmail.com
 - **LinkedIn:** [Your LinkedIn Profile](https://linkedin.com)
