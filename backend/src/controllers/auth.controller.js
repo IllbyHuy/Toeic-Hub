@@ -61,11 +61,29 @@ exports.register = async (req, res, next) => {
 
     if (!emailSent) {
       // Tự động kích hoạt nếu gửi email thất bại (do Render chặn SMTP)
-      await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: { isVerified: true, verifyToken: null }
       });
-      return ApiResponse.created(res, 'Đăng ký thành công nhưng không thể gửi email. Tài khoản đã tự động kích hoạt, bạn có thể đăng nhập ngay.', { autoVerified: true });
+      
+      const token = generateToken(updatedUser.id, false);
+      
+      // Update streak on auto-login
+      await userController.updateUserStreak(updatedUser.id);
+      
+      const userData = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        fullName: updatedUser.fullName,
+        avatarUrl: updatedUser.avatarUrl,
+        role: updatedUser.role,
+      };
+
+      return ApiResponse.created(res, 'Server chặn tính năng gửi mail nên tài khoản đã được tự động kích hoạt và đăng nhập!', { 
+        autoVerified: true, 
+        token, 
+        user: userData 
+      });
     }
 
     return ApiResponse.created(res, 'Đăng ký thành công. Vui lòng nhập mã OTP đã được gửi tới email.', { autoVerified: false });

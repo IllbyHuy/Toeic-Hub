@@ -51,7 +51,10 @@ const Register = () => {
       const response = await api.post('/auth/register', formData);
       toast.success(response.message || 'Đăng ký thành công!');
       setTimeout(() => {
-        if (response.data?.autoVerified) {
+        if (response.data?.autoVerified && response.data?.token) {
+          localStorage.setItem('token', response.data.token);
+          navigate('/feed');
+        } else if (response.data?.autoVerified) {
           navigate('/login');
         } else {
           navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
