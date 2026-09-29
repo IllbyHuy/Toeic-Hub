@@ -226,8 +226,6 @@ exports.login = async (req, res, next) => {
 
 exports.getMe = async (req, res, next) => {
   try {
-    // Update streak on app open
-    await userController.updateUserStreak(req.user.id);
     return ApiResponse.success(res, 'Profile retrieved', req.user);
   } catch (error) {
     next(error);

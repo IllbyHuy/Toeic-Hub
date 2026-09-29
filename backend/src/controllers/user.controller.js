@@ -192,9 +192,7 @@ exports.updateUserStreak = async (userId) => {
           type: 'vocabulary'
         }
       },
-      update: {
-        count: { increment: 1 }
-      },
+      update: {},
       create: {
         userId: userId,
         date: activityDate,
