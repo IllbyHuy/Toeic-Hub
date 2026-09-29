@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-serif: "Lora", serif;
+
+  --color-bg-main: #fafbfd;
+  --color-bg-sec: #ffffff;
+  --color-text-main: #111111;
+  --color-text-sec: #697180;
+  --color-text-muted: #9ca3af;
+  --color-border: #e2e7f0;
+  
+  --color-accent: #4361ee;
+  --color-accent-bg: #e2edf9;
+  --color-primary: #4361ee; /* alias for legacy */
+  
+  --color-status-mastered-bg: #E7F5EC;
+  --color-status-mastered-text: #1E8A4C;
+  --color-status-learning-bg: #FDF1E3;
+  --color-status-learning-text: #C77A1E;
+  --color-status-default-bg: #F1F1F1;
+  --color-status-default-text: #7A7A7A;
+}
+
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+}
+
+/* Premium Card Hover Effect */
+.hover-lift {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hide scrollbar for smooth sliding areas */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 90px;
+  height: 24px;
+  padding: 2px 0;
+  box-sizing: border-box;
+  display: flex;
+  animation: l5-0 3s infinite steps(6);
+  background:
+    linear-gradient(var(--color-text-muted) 0 0) 0 0/0% 100% no-repeat,
+    radial-gradient(circle 3px,var(--color-accent) 90%,#0000) 0 0/20% 100%
+    var(--color-text-muted);
+  overflow: hidden;
+}
+.loader::before {
+  content: "";
+  width: 20px;
+  transform: translate(-100%);
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: 
+    l5-1 .25s .153s infinite steps(5) alternate,
+    l5-2  3s        infinite linear;
+}
+@keyframes l5-1{ 
+    0% {clip-path: polygon(50% 50%,100%   0,100% 0,0 0,0 100%,100% 100%,100% 100%)}
+  100% {clip-path: polygon(50% 50%,100% 65%,100% 0,0 0,0 100%,100% 100%,100%  35%)}
+}
+@keyframes l5-2{ 
+  100% {transform: translate(90px)}
+}
+@keyframes l5-0{ 
+  100% {background-size:120% 100%,20% 100%}
+}
+
+/* 3D Flip Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+/* Pac-Man AI Loader */
+.loader {
+  width: 90px;
+  height: 24px;
+  padding: 2px 0;
+  box-sizing: border-box;
+  display: flex;
+  animation: l5-0 3s infinite steps(6);
+  background:
+    linear-gradient(#f1f5f9 0 0) 0 0/0% 100% no-repeat,
+    radial-gradient(circle 3px,#e2e8f0 90%,#0000) 0 0/20% 100%
+    #f1f5f9;
+  overflow: hidden;
+}
+.loader::before {
+  content: "";
+  width: 20px;
+  transform: translate(-100%);
+  border-radius: 50%;
+  background: #2563eb;
+  animation: 
+    l5-1 .25s .153s infinite steps(5) alternate,
+    l5-2  3s        infinite linear;
+}
+@keyframes l5-1{ 
+    0% {clip-path: polygon(50% 50%,100%   0,100% 0,0 0,0 100%,100% 100%,100% 100%)}
+  100% {clip-path: polygon(50% 50%,100% 65%,100% 0,0 0,0 100%,100% 100%,100%  35%)}
+}
+@keyframes l5-2{ 
+  100% {transform: translate(90px)}
+}
+@keyframes l5-0{ 
+  100% {background-size:120% 100%,20% 100%}
+}
+

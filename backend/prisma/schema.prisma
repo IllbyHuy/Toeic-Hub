@@ -1,0 +1,600 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// ENUMS
+// ----------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum GroupRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum GroupPrivacy {
+  PUBLIC
+  PRIVATE
+}
+
+enum ToeicPart {
+  PART_1
+  PART_2
+  PART_3
+  PART_4
+  PART_5
+  PART_6
+  PART_7
+  GENERAL
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
+enum PinType {
+  GENERAL
+  TIP
+  VOCABULARY
+}
+
+// ----------------------------------------------------
+// MODELS
+// ----------------------------------------------------
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String?
+  fullName     String
+  avatarUrl    String?
+  bio          String?
+  role         Role          @default(USER)
+  isVerified   Boolean       @default(false)
+  verifyToken  String?
+  googleId     String?       @unique
+  facebookId   String?       @unique
+  githubId     String?       @unique
+  currentStreak Int          @default(0)
+  lastActivityDate DateTime?
+
+  // Relations
+  createdGroups   Group[]       @relation("GroupCreator")
+  groupMembers    GroupMember[]
+  posts           Post[]
+  comments        Comment[]
+  votes           Vote[]
+  aiQueries       AiQuery[]
+  savedPosts      SavedPost[]
+  savedGrammars   SavedGrammar[]
+  notificationsReceived Notification[] @relation("notificationsReceived")
+  notificationsSent     Notification[] @relation("notificationsSent")
+  vocabularies    Vocabulary[]
+  grammars        Grammar[]
+  groupMessages   GroupMessage[]
+  reports         Report[]
+  vocabProgresses UserVocabProgress[]
+  groupRequests   GroupRequest[]
+  conversationParticipants ConversationParticipant[]
+  directMessages  DirectMessage[]
+  activityLogs    ActivityLog[]
+
+  friendshipsSent Friendship[] @relation("SentFriendships")
+  friendshipsReceived Friendship[] @relation("ReceivedFriendships")
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("users")
+}
+
+model Friendship {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender     User     @relation("SentFriendships", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("friendships")
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  avatar      String?
+  coverImage  String?
+  privacy     GroupPrivacy  @default(PUBLIC)
+
+  // Creator relation (1 User - N Groups created)
+  creatorId   String
+  creator     User          @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  // Members relation (N-N through GroupMember)
+  members     GroupMember[]
+  posts       Post[]
+  messages    GroupMessage[]
+  vocabularies Vocabulary[]
+  grammars    Grammar[]
+  requests    GroupRequest[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([creatorId])
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String    @id @default(cuid())
+  groupId   String
+  userId    String
+  role      GroupRole @default(MEMBER)
+  joinedAt  DateTime  @default(now())
+  lastReadAt DateTime @default(now())
+
+  // Relations
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId]) // User can only join a group once
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+model GroupRequest {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt DateTime @default(now())
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@map("group_requests")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  participants ConversationParticipant[]
+  messages     DirectMessage[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model DirectMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String       @db.Text
+  fileUrl        String?
+  fileName       String?
+  isRead         Boolean      @default(false)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  parentId       String?
+  parent         DirectMessage? @relation("DMReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies        DirectMessage[] @relation("DMReplies")
+
+  isPinned       Boolean      @default(false)
+  pinType        PinType?
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([parentId])
+  @@map("direct_messages")
+}
+
+model Post {
+  id            String      @id @default(cuid())
+  title         String
+  content       String      @db.Text
+  imageUrl      String?
+  imagePublicId String?     // Cloudinary public ID for deletion
+  fileUrl       String?
+  fileName      String?
+  part          ToeicPart   @default(GENERAL)
+  tags          String[]    @default([])
+
+  // Author relation (1 User - N Posts)
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Optional Group relation (Post can belong to a Group or Public Feed)
+  groupId       String?
+  group         Group?      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Relations
+  comments      Comment[]
+  votes         Vote[]
+  aiQueries     AiQuery[]
+  savedByUsers  SavedPost[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([authorId])
+  @@index([groupId])
+  @@index([part])
+  @@map("posts")
+}
+
+model Comment {
+  id           String     @id @default(cuid())
+  content      String     @db.Text
+  imageUrl     String?    // Bổ sung hỗ trợ ảnh trong comment
+  isAccepted   Boolean    @default(false) // Đánh dấu là câu trả lời đúng nhất
+
+  // Target relations (A comment can belong to a Post, Vocabulary, or Grammar)
+  postId       String?
+  post         Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  vocabularyId String?
+  vocabulary   Vocabulary? @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+
+  grammarId    String?
+  grammar      Grammar?   @relation(fields: [grammarId], references: [id], onDelete: Cascade)
+
+  // Author relation (1 User - N Comments)
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Self-relation for nested replies (1 Comment - N Replies)
+  parentId     String?
+  parent       Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      Comment[]  @relation("CommentReplies")
+
+  // Relations
+  votes        Vote[]
+  aiQueries    AiQuery[]
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([postId])
+  @@index([vocabularyId])
+  @@index([grammarId])
+  @@index([authorId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model Vote {
+  id        String    @id @default(cuid())
+  type      VoteType
+
+  // Voter relation
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Target relation (Either Post or Comment)
+  postId    String?
+  post      Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  commentId String?
+  comment   Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  grammarId String?
+  grammar   Grammar?  @relation(fields: [grammarId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+
+  // Constraints: A user can vote on a post or comment only once
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@unique([userId, grammarId])
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+  @@index([grammarId])
+  @@map("votes")
+}
+
+model AiQuery {
+  id        String   @id @default(cuid())
+  prompt    String   @db.Text
+  response  String   @db.Text
+
+  // User who requested the AI analysis
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Context: Tied to a post or comment if asked in context
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+  @@map("ai_queries")
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+  @@map("saved_posts")
+}
+
+model SavedGrammar {
+  id        String   @id @default(cuid())
+  userId    String
+  grammarId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grammar   Grammar  @relation(fields: [grammarId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, grammarId])
+  @@index([userId])
+  @@index([grammarId])
+  @@map("saved_grammars")
+}
+
+enum Visibility {
+  PRIVATE
+  GROUP
+  PUBLIC
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // Người nhận thông báo
+  senderId  String?  // Người gây ra thông báo
+  content   String
+  isRead    Boolean  @default(false)
+  type      String   // Loại thông báo (VD: "COMMENT", "UPVOTE", "SYSTEM", "FRIEND_REQUEST", "FRIEND_ACCEPT")
+  
+  // Link tới nguồn gây ra thông báo (tùy chọn)
+  postId    String?
+  tipId     String?
+  commentId String?
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation("notificationsReceived", fields: [userId], references: [id], onDelete: Cascade)
+  sender    User?    @relation("notificationsSent", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model Vocabulary {
+  id         String   @id @default(cuid())
+  userId     String
+  word       String
+  type       String?
+  meaning    String
+  example    String?
+  synonyms   String[] @default([])
+  visibility Visibility @default(PRIVATE)
+  groupId    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  // SRS Fields
+  status         VocabStatus @default(NEW)
+  nextReviewDate DateTime?
+  interval       Int         @default(0) // Số ngày chờ cho lần review tiếp theo
+  easeFactor     Float       @default(2.5) // SM-2 ease factor
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group      Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+
+  @@index([userId])
+  @@index([groupId])
+  @@map("vocabularies")
+}
+
+model Grammar {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  structure   String
+  description String?  @db.Text
+  examples    String[] @default([])
+  imageUrl    String?
+  voiceUrl    String?
+  part        ToeicPart @default(GENERAL)
+  visibility  Visibility @default(PUBLIC)
+  groupId     String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group       Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  votes       Vote[]
+  savedByUsers SavedGrammar[]
+
+  @@index([userId])
+  @@index([groupId])
+  @@map("grammars")
+}
+
+model GroupMessage {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  content   String   @db.Text
+  fileUrl   String?
+  fileName  String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  parentId  String?
+  parent    GroupMessage? @relation("MessageReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   GroupMessage[] @relation("MessageReplies")
+
+  isPinned  Boolean  @default(false)
+  pinType   PinType? 
+  isSystem  Boolean  @default(false)
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("group_messages")
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  targetType String   // "POST", "TIP", "COMMENT", "USER"
+  targetId   String
+  reason     String   @db.Text
+  status     String   @default("PENDING") // "PENDING", "RESOLVED", "DISMISSED"
+
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@index([reporterId])
+  @@index([status])
+  @@map("reports")
+}
+
+
+
+
+model Topic {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  words       SystemVocab[]
+  
+  @@map("topics")
+}
+
+model SystemVocab {
+  id            String   @id @default(cuid())
+  topicId       String
+  word          String
+  pronunciation String?
+  type          String?
+  meaning       String
+  audioUrl      String?
+  example       String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  topic         Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  progresses    UserVocabProgress[]
+
+  @@index([topicId])
+  @@map("system_vocabs")
+}
+
+model UserVocabProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  systemVocabId String
+  status         VocabStatus @default(NEW)
+  nextReviewDate DateTime?
+  interval       Int         @default(0)
+  easeFactor     Float       @default(2.5)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocab         SystemVocab @relation(fields: [systemVocabId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, systemVocabId])
+  @@index([userId])
+  @@index([systemVocabId])
+  @@map("user_vocab_progress")
+}
+
+enum VocabStatus {
+  NEW
+  LEARNING
+  REVIEW
+  MASTERED
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  count     Int      @default(0)
+  type      String   @default("vocabulary")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date, type])
+  @@index([userId])
+  @@map("activity_logs")
+}
