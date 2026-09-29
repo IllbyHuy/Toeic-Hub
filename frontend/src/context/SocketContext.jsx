@@ -15,9 +15,12 @@ export const SocketProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const newSocket = io('http://localhost:5000', {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 
+      (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '') : 'http://localhost:5000');
+
+    const newSocket = io(socketUrl, {
       query: { token },
-      transports: ['websocket'], // dùng websocket để nhanh nhất
+      transports: ['websocket', 'polling'], // fallback to polling if websocket fails on free tier
     });
 
     setSocket(newSocket);

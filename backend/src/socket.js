@@ -7,10 +7,12 @@ const onlineUsers = new Map(); // Map to track userId -> Set of socketIds
 
 module.exports = {
   init: (httpServer) => {
+    const clientOrigin = process.env.CLIENT_URL || '*';
     io = new Server(httpServer, {
       cors: {
-        origin: 'http://localhost:5173', // Frontend URL
+        origin: clientOrigin === '*' ? '*' : [clientOrigin, 'http://localhost:5173'],
         methods: ['GET', 'POST'],
+        credentials: true,
       },
     });
 
