@@ -355,11 +355,12 @@ const GroupDetail = () => {
                             <a href={msg.fileUrl} target="_blank" rel="noreferrer">
                               <img src={msg.fileUrl} alt="attachment" className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
                             </a>
-                          ) : msg.fileName?.match(/\.(mp3|wav|ogg)$/i) || msg.fileUrl.endsWith('.mp3') || msg.fileUrl.endsWith('.wav') ? (
-                            <div className="p-2 bg-slate-50">
-                              <audio controls className="w-full h-10 outline-none">
-                                <source src={msg.fileUrl} type="audio/mpeg" />
-                              </audio>
+                          ) : msg.fileName?.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i) || msg.fileUrl.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i) ? (
+                            <div className="p-3 bg-indigo-50/50 flex flex-col gap-2 border-b border-indigo-100/50">
+                              <div className="flex items-center gap-2 text-[11px] font-semibold text-indigo-700 truncate px-1">
+                                🎵 {msg.fileName || 'Âm thanh'}
+                              </div>
+                              <audio controls src={msg.fileUrl} className="w-full h-10 rounded-full outline-none"></audio>
                             </div>
                           ) : msg.fileName?.match(/\.(mp4|webm)$/i) || msg.fileUrl.endsWith('.mp4') ? (
                             <video controls className="w-full h-auto max-h-48 outline-none bg-black">
