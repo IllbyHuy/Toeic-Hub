@@ -352,7 +352,7 @@ const GroupDetail = () => {
 
                       {/* File Rendering */}
                       {msg.fileUrl && (
-                        <div className={`overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white text-slate-700 ${isAudioFile ? 'w-full min-w-[280px] sm:min-w-[320px]' : 'max-w-[200px] md:max-w-[250px]'}`}>
+                        <div className={`overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white text-slate-700 ${isAudioFile ? 'w-full min-w-[250px] sm:w-[400px] lg:w-[550px]' : 'max-w-[200px] md:max-w-[250px]'}`}>
                           {msg.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                             <a href={msg.fileUrl} target="_blank" rel="noreferrer">
                               <img src={msg.fileUrl} alt="attachment" className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
