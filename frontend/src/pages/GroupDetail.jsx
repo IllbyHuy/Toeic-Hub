@@ -238,6 +238,8 @@ const GroupDetail = () => {
               const isMe = msg.userId === user.id;
               const showAvatar = !isMe && (idx === 0 || messages[idx - 1].userId !== msg.userId);
 
+              const isAudioFile = msg.fileName?.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i) || msg.fileUrl?.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i);
+
               if (msg.isSystem) {
                 return (
                   <div key={msg.id || idx} className="flex justify-center w-full my-4">
@@ -265,7 +267,7 @@ const GroupDetail = () => {
                       )}
                     </div>
                   )}
-                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%]`}>
                     {!isMe && showAvatar && (
                       <span className="text-[10px] font-semibold text-slate-500 ml-1 mb-1">{msg.user?.fullName}</span>
                     )}
@@ -350,7 +352,7 @@ const GroupDetail = () => {
 
                       {/* File Rendering */}
                       {msg.fileUrl && (
-                        <div className={`max-w-[200px] md:max-w-[250px] overflow-hidden rounded-xl border border-slate-200 shadow-sm ${!isMe ? 'bg-white text-slate-700' : 'bg-white text-slate-700'}`}>
+                        <div className={`overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white text-slate-700 ${isAudioFile ? 'w-full min-w-[280px] sm:min-w-[320px]' : 'max-w-[200px] md:max-w-[250px]'}`}>
                           {msg.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                             <a href={msg.fileUrl} target="_blank" rel="noreferrer">
                               <img src={msg.fileUrl} alt="attachment" className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
