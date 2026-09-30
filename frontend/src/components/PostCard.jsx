@@ -212,8 +212,11 @@ const PostCard = ({ post: initialPost }) => {
       {/* Other Attachments (Audio/PDF) */}
       {post.fileUrl && (
         <div className="mb-4">
-          {post.fileUrl.match(/\.(mp3|wav|m4a|ogg|aac)$/i) || (post.fileName && post.fileName.match(/\.(mp3|wav|m4a|ogg|aac)$/i)) || post.fileUrl.includes('/video/upload/') ? (
-            <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 flex items-center gap-3">
+          {post.fileUrl.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i) || (post.fileName && post.fileName.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i)) || post.fileUrl.includes('/video/upload/') ? (
+            <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 min-w-[300px] w-full max-w-md">
+              <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700 mb-3 truncate">
+                <span className="text-lg">🎵</span> {post.fileName || 'Âm thanh đính kèm'}
+              </div>
               <audio controls src={post.fileUrl} className="w-full h-10 rounded-full">
                 Trình duyệt của bạn không hỗ trợ thẻ audio.
               </audio>

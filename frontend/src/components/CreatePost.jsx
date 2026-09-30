@@ -114,8 +114,11 @@ const CreatePost = ({ onPostCreated }) => {
             {image && image.type.startsWith('image/') && (
               <img src={imagePreview} alt="Preview" className="max-h-60 rounded border border-slate-200" />
             )}
-            {image && image.type.startsWith('audio/') && (
-              <audio controls src={imagePreview} className="mt-2 w-full max-w-sm"></audio>
+            {image && (image.type.startsWith('audio/') || image.name.match(/\.(mp3|wav|m4a|ogg|aac|flac|wma|amr|opus)$/i)) && (
+              <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100 min-w-[300px]">
+                <div className="text-xs font-semibold text-indigo-600 mb-2 truncate px-1">🎵 {image.name}</div>
+                <audio controls src={imagePreview} className="w-full max-w-sm"></audio>
+              </div>
             )}
             {image && image.type === 'application/pdf' && (
               <div className="p-4 bg-slate-100 rounded-lg border border-slate-200 text-slate-700 flex items-center gap-2">

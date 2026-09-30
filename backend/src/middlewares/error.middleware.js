@@ -27,6 +27,11 @@ const errorHandler = (err, req, res, next) => {
     error = new ApiError(401, 'Your token has expired. Please log in again.');
   }
 
+  // Handle Multer errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    error = new ApiError(400, 'Dung lượng tệp tải lên vượt quá giới hạn cho phép (20MB).');
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || 'Internal Server Error',
