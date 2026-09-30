@@ -16,8 +16,8 @@ const CreatePost = ({ onPostCreated }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 20 * 1024 * 1024) {
-        setError('Tệp quá lớn. Vui lòng chọn tệp dưới 20MB.');
+      if (file.size > 500 * 1024 * 1024) {
+        setError('Tệp quá lớn. Vui lòng chọn tệp dưới 500MB.');
         return;
       }
       setImage(file);
